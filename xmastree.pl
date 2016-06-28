@@ -13,15 +13,6 @@ btnREADY = 9
 # btnRESET = 8
 btnSTART = 7    
 
-# Returns the GPIO pin number to manipulate.  'pin' is an integer,
-# 1-8.
-def pin_index(pin):
-  try:
-    return pins[int(pin) - 1]
-  except ValueError:
-    print "Unrecognized pin:",pin
-    sys.exit(1)
-
 #RuntimeWarning: This channel is already in use, continuing anyway.
 #Use GPIO.setwarnings(False) to disable warnings.
 GPIO.setwarnings(False)
