@@ -9,7 +9,7 @@ GPIO.setmode(GPIO.BCM)
 # v2
 pins = [18, 25, 10, 24, 23, 22, 27, 17]
 
-btnREADY = 9
+btnREADY = 8
 # btnRESET = 8
 btnSTART = 7    
 
@@ -70,7 +70,7 @@ def startup():
   for p in pins:
     GPIO.setup(p, GPIO.OUT, initial=GPIO.HIGH)
   GPIO.setup(btnREADY, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-  GPIO.add_event_detect(btnREADY, GPIO.BOTH, bouncetime=200,
+  GPIO.add_event_detect(btnREADY, GPIO.BOTH, bouncetime=100,
                         callback=onREADY)
   GPIO.setup(btnSTART, GPIO.IN, pull_up_down=GPIO.PUD_UP)
   GPIO.add_event_detect(btnSTART, GPIO.BOTH, bouncetime=200,
