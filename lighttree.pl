@@ -2,6 +2,7 @@
 import RPi.GPIO as GPIO
 import sys
 import time
+import os
 
 GPIO.setmode(GPIO.BCM)
 
@@ -62,18 +63,31 @@ def showStartSequence():
   GPIO.output(pins[4], GPIO.HIGH)
   GPIO.output(pins[7], GPIO.HIGH)
 
+def showShutdownSequence():
+  for pp in pins:
+    GPIO.output(pp, GPIO.LOW)
+  for p in range(0, 5):
+    time.sleep(0.5)
+    GPIO.output(pins[p], GPIO.HIGH)
+
 # Asynchronously invoked when the START button changes state.
 def onSTART(pin):
   if GPIO.input(pin) == 0:
     # Button pressed
     showStartSequence()
 
+ready_press = 0
 # Asynchronously invoked when the READY button on the pole changes state.
 def onREADY(pin):
-  if GPIO.input(pin) == 0:
-    # Button pressed
+  global ready_press
+  if GPIO.input(pin) == 1:
+    # Button released, cancel timing how long it was held
+    ready_press = 0
+  elif ready_press == 0:
+    ready_press = time.time()
     showReadySequence()
-
+  # else ignore apparent button "press" while already held
+    
 # Set up all the pins we're using
 def startup():
   # Turn off all the relays
@@ -96,6 +110,12 @@ try:
   # program will terminate if we just exit the main thread, so instead we have
   # to wait forever in this loop.
   while (1):
-    time.sleep(60)
+    time.sleep(1)
+    if ready_press != 0:
+      howlong = time.time() - ready_press
+      if howlong > 5.0:
+        showShutdownSequence()
+        os.system("shutdown -h now")
+        ready_press = 0
 finally:
   GPIO.cleanup()
