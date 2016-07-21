@@ -16,8 +16,8 @@
    id="svg5403"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="Xmastree Wiring.svg"
-   inkscape:export-filename="/Users/jeffpiazza/Raspberry Pi/xmastree/Xmastree Wiring.png"
+   sodipodi:docname="wiring.svg"
+   inkscape:export-filename="/Users/jeffpiazza/Raspberry Pi/lighttree/wiring.png"
    inkscape:export-xdpi="1000"
    inkscape:export-ydpi="1000">
   <defs
@@ -30,7 +30,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="477"
+     inkscape:cx="240.5"
      inkscape:cy="517.40211"
      inkscape:document-units="px"
      inkscape:current-layer="layer3"
@@ -49,7 +49,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -1612,7 +1612,7 @@
        style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#8b4513;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <path
        style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#ff0000;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 348,229 c 0,0 103.15974,130.65278 88.5,203 C 419.10472,517.84734 246,613 246,613"
+       d="m 369,211 c 0,0 86.84206,145.10051 67.5,219 C 414.32123,514.73761 246,611 246,611"
        id="path4543"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cac" />
