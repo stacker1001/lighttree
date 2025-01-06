@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from fastapi import FastAPI
+from fastapi_utils.tasks import repeat_every
 import RPi.GPIO as GPIO
 import sys
 import time
@@ -30,6 +31,8 @@ btnSTART2 = 27
 # Out to Track
 outSTART1 = 24
 #outSTART2 = 0
+
+status = 'INITIALIZING'
 
 #RuntimeWarning: This channel is already in use, continuing anyway.
 #Use GPIO.setwarnings(False) to disable warnings.
@@ -110,35 +113,93 @@ def showShutdownSequence():
     logging.error(str(e))
     return {"error": str(e)}
 
-# Asynchronously invoked when the START button changes state.
-def onSTART(pin):
+@app.get("/button/start")
+def onSTART_api():
   try:
-    logger.info('Start Button Pressed')
-    if GPIO.input(pin) == 0:
+    onSTART(btnSTART1, True)
+    return {"button": "start"}
+  except Exception as e:
+    logging.error(str(e))
+    return {"error": str(e)}
+
+
+# Asynchronously invoked when the START button changes state.
+def onSTART(pin, api = False):
+  global status
+  try:
+    pin = int(pin)
+    if (GPIO.input(pin) == 0) or api:
       # Button pressed
-      showStartSequence()
+      logger.info('Start Button Pressed')
+      if status == 'READY':
+        logger.info('Starting Race')
+        showStartSequence()
+        status = 'RACING'
+      else:
+        logger.info('Track not Ready')
   except Exception as e:
     logging.error(str(e))
 
+@app.get("/button/ready")
+def onREADY_api():
+  try:
+    onREADY(btnREADY, True)
+    return {"button": "ready"}
+  except Exception as e:
+    logging.error(str(e))
+    return {"error": str(e)}
+  
 ready_press = 0
 # Asynchronously invoked when the READY button on the pole changes state.
-def onREADY(pin):
+def onREADY(pin, api = False):
   global ready_press
+  global status
   try:
-    logger.info('Ready Button Pressed')
-    if GPIO.input(pin) == 1:
-      # Button released, cancel timing how long it was held
-      ready_press = 0
-    elif ready_press == 0:
+    if (ready_press == 0) and ((GPIO.input(pin) == 0) or api):
+      logger.info('Ready Button Pressed')
       ready_press = time.time()
       showReadySequence()
-    # else ignore apparent button "press" while already held
-    elif (time.time() - ready_press) > 5.0:
-      logger.info('Shutting Down Gracefully')
-      showShutdownSequence()
-      GPIO.cleanup()
-      os.system("shutdown -h now")
+      status = 'READY'
+    elif GPIO.input(pin) == 1:
+      # Button released, cancel timing how long it was held
+      logger.info('Ready Button Released')
       ready_press = 0
+    # else ignore apparent button "press" while already held
+  except Exception as e:
+    logging.error(str(e))
+
+@app.on_event('startup')
+@repeat_every(seconds=1, logger=logger, raise_exceptions=True)
+def long_press():
+  global ready_press
+  global btnREADY
+  try:
+    #logger.info('ready_press = {0}'.format(ready_press))
+    if (ready_press != 0) and (GPIO.input(btnREADY) == 0):
+      howlong = time.time() - ready_press
+      if (howlong > 5.0) and (status != 'SHUTTING-DOWN'):
+        shutdown()
+        #ready_press = 0
+    else:
+      ready_press = 0
+  except Exception as e:
+    logging.error(str(e))
+
+@app.get("/shutdown")
+def shutdown():
+  global status
+  try:
+    logger.info('Shutting Down Gracefully')
+    showShutdownSequence()
+    status = 'SHUTTING-DOWN'
+    os.system("shutdown -h now")
+  except Exception as e:
+    logging.error(str(e))
+
+@app.on_event('shutdown')
+def GPIO_cleanup():
+  try:
+    GPIO.cleanup()
   except Exception as e:
     logging.error(str(e))
 
@@ -155,10 +216,11 @@ def startup():
     GPIO.setup(outSTART1, GPIO.OUT, initial=GPIO.LOW)
     #GPIO.setup(outSTART2, GPIO.OUT, initial=GPIO.LOW)
     # Set up pushbutton handling
-    GPIO.setup(btnREADY, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(btnREADY, GPIO.BOTH, bouncetime=100, callback=onREADY)
-  #  GPIO.setup(btnSTART1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-  #  GPIO.add_event_detect(btnSTART1, GPIO.BOTH, bouncetime=200, callback=onSTART)
+    GPIO.setup(btnREADY, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.add_event_detect(btnREADY, GPIO.FALLING, bouncetime=300, callback=onREADY)
+    #GPIO.setup(btnSTART1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(btnSTART1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.add_event_detect(btnSTART1, GPIO.RISING, bouncetime=300, callback=onSTART)
   #  GPIO.setup(btnSTART2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
   #  GPIO.add_event_detect(btnSTART2, GPIO.BOTH, bouncetime=200, callback=onSTART)
     # Show that we're open for business
